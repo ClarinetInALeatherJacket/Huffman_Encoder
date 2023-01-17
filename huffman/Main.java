@@ -28,6 +28,7 @@ class Main{
 
     private static String getFile(){
         Scanner scanner = new Scanner(System.in);
+        System.out.println(Arrays.toString(new File("./huffman").listFiles()));
         System.out.println("Please enter the name of the file:");
         String filename = scanner.nextLine();
         try{
@@ -35,19 +36,15 @@ class Main{
             Scanner tester = new Scanner(file);
         } catch (FileNotFoundException e){
             System.out.println("Invalid file name, please try again.");
-            getFile();
+            return getFile();
         }
         return filename;
     }
     public static void main(String[] args) throws IOException {
         int mode = getMode();
+        File input = new File(getFile());
+        byte[] data = Files.readAllBytes(input.toPath());
         if (mode == 1) {
-            File input = new File(getFile());
-            byte[] data = new byte[0];
-
-            try {
-                data = Files.readAllBytes(input.toPath());
-            } catch (IOException ignored) {} //file path already tested in getFile method, so this exception can be ignored
 
             HashMap<Byte, Integer> freqDict = new HashMap<>();
 
@@ -73,30 +70,51 @@ class Main{
             File output = new File(input.getName() + ".huf");
             int fileNum = 2;
             while (!output.createNewFile()){
-                output = new File(input.getName() + ".huff(" + fileNum + ")");
+                output = new File(input.getName() + ".huf(" + fileNum + ")");
                 fileNum += 1;
             }
-            Files.write(Path.of(output.getPath()), ByteBuffer.allocate(4).putInt(treeBuilder.getTree().size()).array());//treeBuilder.getTree().size()
-            Files.write(Path.of(output.getPath()), treeCompressor.getCompressedTree());
-            Files.write(Path.of(output.getPath()), ByteBuffer.allocate(4).putInt(data.length).array());//data.length
-            Files.write(Path.of(output.getPath()), compressor.getCompressedData());
+            ArrayList<Byte> fileWriter = new ArrayList<>();
+            byte[] temp1 = ByteBuffer.allocate(4).putInt(treeBuilder.getTree().getNumber()+1).array();
+            for (Byte info: temp1){
+                fileWriter.add(info);
+            }
+            for (Byte info: treeCompressor.getCompressedTree()){
+                fileWriter.add(info);
+            }
+            byte[] temp2 = ByteBuffer.allocate(4).putInt(data.length).array();
+            for (Byte info: temp2){
+                fileWriter.add(info);
+            }
+            for (Byte info: compressor.getCompressedData()){
+                fileWriter.add(info);
+            }
 
+            byte[] finalFileWriter = new byte[fileWriter.size()];
+
+            for (int i = 0; i < fileWriter.size(); i++){
+                finalFileWriter[i] = fileWriter.get(i);
+            }
+            
+            Files.write(Path.of(output.getPath()), finalFileWriter);
 
         } else {
-            File input = new File(getFile());
-            byte[] data = new byte[0];
-
-            try {
-                data = Files.readAllBytes(input.toPath());
-            } catch (IOException ignored) {} //file path already tested in getFile method, so this exception can be ignored
 
             int num_nodes = ByteBuffer.wrap(Arrays.copyOfRange(data,0,4)).getInt();
-            byte[] treeData = Arrays.copyOfRange(data, 5, num_nodes);
-            int size = ByteBuffer.wrap(Arrays.copyOfRange(data, num_nodes+1,num_nodes+5)).getInt();
-            byte[] fileData = Arrays.copyOfRange(data,num_nodes+6, data.length);
+            byte[] treeData = Arrays.copyOfRange(data, 4, num_nodes*4 +4);
+            int size = ByteBuffer.wrap(Arrays.copyOfRange(data, num_nodes*4 +4,num_nodes*4 +8)).getInt();
+            byte[] fileData = Arrays.copyOfRange(data,num_nodes*4 +8, data.length);
 
-            TreeDecompressor treeDecompressor = new TreeDecompressor();
-            Decompressor decompressor = new Decompressor();
+            TreeDecompressor treeDecompressor = new TreeDecompressor(treeData, num_nodes);
+            Decompressor decompressor = new Decompressor(fileData, treeDecompressor.getTree(), size);
+
+            File output = new File(input.getName() + ".orig");
+            int fileNum = 2;
+            while (!output.createNewFile()){
+                output = new File(input.getName() + ".orig(" + fileNum + ")");
+                fileNum += 1;
+            }
+
+            Files.write(Path.of(output.getPath()), decompressor.getDecompressedData());
 
         }
     }

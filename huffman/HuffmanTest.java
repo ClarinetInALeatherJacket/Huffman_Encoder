@@ -21,4 +21,12 @@ public class HuffmanTest {
         System.out.println(out.toString());
     }
 
+    @Test
+    void leafCheckerTest(){
+        TreeNode x = new TreeNode((byte)44);
+        Assertions.assertTrue(x.isLeaf());
+        TreeNode y = new TreeNode(new TreeNode((byte) 34), new TreeNode((byte) 5));
+        Assertions.assertFalse(y.isLeaf());
+    }
+
 }

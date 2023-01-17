@@ -1,16 +1,17 @@
 package huffman;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class TreeNode {
 
 
-    private TreeNode left;
-    private TreeNode right;
+    public TreeNode left;
+    public TreeNode right;
     private int number;
-    private int symbol;
+    private byte symbol;
 
-    public TreeNode(int symbol){
+    public TreeNode(byte symbol){
         this.symbol = symbol;
     }
 
@@ -19,13 +20,23 @@ public class TreeNode {
         this.left = left;
     }
 
+    public TreeNode(TreeNode tree, char side){
+        if (side == 'r'){
+            this.right = tree;
+        } else {
+            this.left = tree;
+        }
+    }
+
+    public TreeNode (String in){}
+
     public boolean isLeaf(){
-        return (!(this.left == null) && !(this.right == null) && (int.class.isInstance(this.symbol)));
+        return ((this.left == null) && (this.right == null));
     }
 
     public int getNumber(){ return number;}
 
-    public int getSymbol(){
+    public byte getSymbol(){
         return symbol;
     }
 
@@ -49,13 +60,13 @@ public class TreeNode {
         this.right = right;
     }
 
-    public void setSymbol(int symbol) {
+    public void setSymbol(byte symbol) {
         this.symbol = symbol;
     }
 
-    public boolean contains(int goal){
-        if (this.symbol == goal){ return true; }
-        if (this.isLeaf()){ return false; }
+    public boolean contains(byte goal){
+        if (this.symbol == goal) return true;
+        if (this.isLeaf()) return false;
         return this.left.contains(goal) || this.right.contains(goal);
     }
 
@@ -65,6 +76,17 @@ public class TreeNode {
         } else {
             return 1 + this.left.size() + this.right.size();
         }
+    }
+
+    public ArrayList<Byte> getSymbols(){
+        ArrayList<Byte> out = new ArrayList<Byte>();
+        if (this.isLeaf()){
+            out.add(this.symbol);
+            return out;
+        }
+        out = this.left.getSymbols();
+        out.addAll(this.right.getSymbols());
+        return out;
     }
 
     @Override

@@ -35,7 +35,7 @@ public class TreeBuilder {
 
         TreeNode output = leafList.get(0).getValue0();
         if (output.isLeaf()){
-            output = new TreeNode(output, new TreeNode(output.getSymbol()+1));
+            output = new TreeNode(output, new TreeNode((byte) (output.getSymbol()+1)));
         }
         return output;
     }

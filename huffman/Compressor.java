@@ -18,18 +18,31 @@ public class Compressor {
         }
 
         if (bitString.length() > 8){
-            for (int counter = 0; counter < Math.floorDiv(bitString.length(),2); counter++){
+            int quotient = bitString.toString().length() / 8;
+            for (int counter = 0; counter < quotient; counter++){
 
-                convertedBytes.add((byte) Integer.parseInt(bitString.substring(8*counter, 8*(counter+1)),2));
-                endpoint = counter;
+                if (bitString.charAt(8*endpoint) == '1'){
+                    convertedBytes.add((byte) (Integer.parseInt(bitString.substring(8*endpoint, 8*(endpoint+1)),2)-256));
+                } else {
+                    convertedBytes.add((byte) (Integer.parseInt(bitString.substring(8*endpoint, 8*(endpoint+1)),2)));
+                }
+                endpoint = counter+1;
             }
         }
 
-        while (bitString.substring(endpoint).length() < 8){
+        int bitStringLength = bitString.length();
+        int remainder = bitStringLength % 8;
+        while (remainder < 8){
             bitString.append("0");
+            remainder ++;
         }
 
-        convertedBytes.add((byte) Integer.parseInt(bitString.substring(endpoint),2));
+        if (bitString.charAt(8*endpoint) == '1'){
+            convertedBytes.add((byte) (Integer.parseInt(bitString.substring(8*endpoint),2)-256));
+        } else {
+            convertedBytes.add((byte) (Integer.parseInt(bitString.substring(8*endpoint),2)));
+        }
+
 
         byte[] out = new byte[convertedBytes.size()];
         for (int position = 0; position < out.length; position++){
@@ -54,7 +67,7 @@ public class Compressor {
         return out;
     }
 
-    private String generateCode(TreeNode huffmanTree, int symbol){
+    private String generateCode(TreeNode huffmanTree, byte symbol){
         StringBuilder out = new StringBuilder();
         while (!huffmanTree.isLeaf()){
             if (huffmanTree.getLeft().contains(symbol)){
